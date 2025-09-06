@@ -1,86 +1,164 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!doctype html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vivk AI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🤖 Vivk AI</title>
+  <meta name="description" content="مساعد ذكاء اصطناعي سريع يحوّل النص إلى ردود وصور.">
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(to right, #141E30, #243B55);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+    :root{
+      --bg1:#0f172a; --bg2:#0b1220; --card:#101827aa; --glass:#0b1220aa;
+      --txt:#e5e7eb; --muted:#94a3b8; --brand1:#8b5cf6; --brand2:#06b6d4; --ok:#10b981; --btn:#2563eb;
+      --radius:16px;
     }
-    h1 {
-      margin-bottom: 20px;
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family: ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Kufi Arabic", sans-serif;
+      color:var(--txt);
+      background: radial-gradient(1000px 600px at 10% -10%, #1f2937, transparent 60%),
+                  radial-gradient(800px 500px at 110% 10%, #0ea5e9, transparent 50%),
+                  linear-gradient(120deg,var(--bg1),var(--bg2));
+      display:flex; align-items:center; justify-content:center; padding:24px;
     }
-    .chat-box {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    .app{width:min(920px,100%); backdrop-filter:saturate(140%) blur(10px); background:linear-gradient(180deg, #0b1220cc, #0b122080); border:1px solid #1f2a44; border-radius:24px; padding:24px; box-shadow:0 20px 60px #0008}
+    .header{display:flex; align-items:center; gap:16px; justify-content:center; margin-bottom:14px}
+    .title{font-size:clamp(26px,4vw,36px); font-weight:800; letter-spacing:.5px; display:flex; gap:12px; align-items:center}
+    .badge{font-size:12px; color:var(--muted); background:#0b1325; border:1px solid #1d2846; padding:6px 10px; border-radius:999px}
+    .logo{width:56px; height:56px; border-radius:12px; background:#fff; overflow:hidden; display:grid; place-items:center}
+    .mode{
+      display:flex; gap:8px; background:#0c1427; border:1px solid #1f2a44; padding:6px; border-radius:999px; margin:6px auto 16px; width:max-content
     }
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      margin-bottom: 10px;
-      resize: none;
+    .mode button{
+      border:0; padding:10px 14px; border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; font-weight:700
     }
-    button {
-      background: #00c6ff;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #0072ff;
-    }
-    .response {
-      margin-top: 15px;
-      padding: 10px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 5px;
-      min-height: 40px;
-    }
+    .mode button.active{color:#fff; background:linear-gradient(90deg,var(--brand1),var(--brand2))}
+    .card{background:linear-gradient(180deg,#0c1427cc,#0c1427aa); border:1px solid #1f2a44; border-radius:var(--radius); padding:18px}
+    .chat{height:360px; overflow:auto; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth}
+    .msg{padding:12px 14px; border-radius:14px; line-height:1.7; width:fit-content; max-width:95%}
+    .user{align-self:flex-start; background:#0e1a32; border:1px solid #1e2b4a}
+    .bot{align-self:flex-end; color:#0b1220; background:linear-gradient(90deg,#a78bfa,#22d3ee)}
+    .image-box{display:grid; place-items:center; border-radius:12px; overflow:hidden; border:1px dashed #27406d; min-height:300px}
+    .row{display:flex; gap:10px; margin-top:14px}
+    input[type=text]{flex:1; padding:14px 16px; border-radius:12px; border:1px solid #1f2a44; background:#0b1325; color:var(--txt); outline:none}
+    button.send{padding:14px 18px; border-radius:12px; border:0; cursor:pointer; font-weight:800; color:#fff; background:linear-gradient(90deg,var(--btn),#3b82f6)}
+    .muted{color:var(--muted); font-size:13px}
+    .footer{display:flex; justify-content:space-between; align-items:center; margin-top:8px}
+    .spinner{display:inline-block; width:18px; height:18px; border:3px solid #0000; border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite; vertical-align:-3px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    img.generated{max-width:100%; display:block}
   </style>
 </head>
 <body>
-  <h1>🤖 Vivk AI</h1>
-  <div class="chat-box">
-    <textarea id="message" rows="3" placeholder="اكتب رسالتك هنا..."></textarea>
-    <button onclick="sendMessage()">إرسال</button>
-    <div class="response" id="response">✨ الرد سيظهر هنا</div>
+  <div class="app">
+    <div class="header">
+      <div class="logo">
+        <img alt="Vivk logo" src="data:image/jpeg;base64,REPLACE_BASE64_HERE" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div class="title">Vivk AI</div>
+      <span class="badge">سريع · حديث · يدعم الصور</span>
+    </div>
+
+    <div class="mode" role="tablist" aria-label="اختيار النمط">
+      <button id="tab-chat" class="active" onclick="switchMode('chat')">دردشة</button>
+      <button id="tab-image" onclick="switchMode('image')">تحويل نص → صورة</button>
+    </div>
+
+    <div id="view-chat" class="card">
+      <div id="chat" class="chat" aria-live="polite" aria-busy="false"></div>
+      <div class="row">
+        <input id="prompt" type="text" placeholder="اكتب رسالتك…" onkeydown="if(event.key==='Enter') sendMessage()"/>
+        <button class="send" onclick="sendMessage()">إرسال</button>
+      </div>
+      <div class="footer">
+        <span class="muted">نموذج Vivk مخصص للغة العربية والإنجليزية.</span>
+        <span id="loading" hidden><span class="spinner"></span> جاري التفكير…</span>
+      </div>
+    </div>
+
+    <div id="view-image" class="card" style="display:none">
+      <div id="imgBox" class="image-box muted">اكتب وصف الصورة ثم اضغط توليد</div>
+      <div class="row">
+        <input id="imgPrompt" type="text" placeholder="مثال: قطة فضائية بأسلوب بكسل"/>
+        <button class="send" onclick="generateImage()">توليد</button>
+      </div>
+      <div class="footer">
+        <span class="muted">يحفظ الصورة محليًا فقط — لا يتم مشاركة مدخلاتك علنًا.</span>
+        <span id="loadingImg" hidden><span class="spinner"></span> يتم إنشاء الصورة…</span>
+      </div>
+    </div>
   </div>
 
   <script>
-    async function sendMessage() {
-      const message = document.getElementById("message").value;
-      const responseDiv = document.getElementById("response");
-      responseDiv.innerText = "⏳ جاري المعالجة...";
+    const chatEl = document.getElementById('chat');
+    const promptEl = document.getElementById('prompt');
+    const loadingEl = document.getElementById('loading');
 
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+    function switchMode(mode){
+      document.getElementById('view-chat').style.display = (mode==='chat')?'block':'none';
+      document.getElementById('view-image').style.display = (mode==='image')?'block':'none';
+      document.getElementById('tab-chat').classList.toggle('active',mode==='chat');
+      document.getElementById('tab-image').classList.toggle('active',mode==='image');
+    }
+
+    function addMsg(text, who='user'){
+      const b = document.createElement('div');
+      b.className = `msg ${who==='user'?'user':'bot'}`;
+      b.textContent = text;
+      chatEl.appendChild(b);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendMessage(){
+      const message = (promptEl.value || '').trim();
+      if(!message) return;
+      addMsg(message,'user');
+      promptEl.value = '';
+      loadingEl.hidden = false;
+      try{
+        const r = await fetch('/api/chat', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ message })
         });
+        const j = await r.json();
+        addMsg(j.reply || 'لم يصل رد من الخادم. تأكد من المفتاح.' ,'bot');
+      }catch(e){
+        console.error(e);
+        addMsg('حدث خطأ غير متوقع.','bot');
+      }finally{
+        loadingEl.hidden = true;
+      }
+    }
 
-        const data = await res.json();
-        responseDiv.innerText = data.reply || "⚠️ لم يصل رد";
-      } catch (err) {
-        responseDiv.innerText = "❌ حدث خطأ بالاتصال";
+    // Image generation
+    const imgPromptEl = document.getElementById('imgPrompt');
+    const loadingImgEl = document.getElementById('loadingImg');
+    const imgBox = document.getElementById('imgBox');
+
+    async function generateImage(){
+      const prompt = (imgPromptEl.value||'').trim();
+      if(!prompt) return;
+      imgBox.innerHTML = '…';
+      loadingImgEl.hidden = false;
+      try{
+        const r = await fetch('/api/image', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ prompt })
+        });
+        const j = await r.json();
+        if(j.url){
+          imgBox.innerHTML = '';
+          const im = document.createElement('img');
+          im.src = j.url; im.alt = prompt; im.className='generated';
+          imgBox.appendChild(im);
+        }else{
+          imgBox.textContent = j.error || 'تعذر توليد الصورة.';
+        }
+      }catch(err){
+        console.error(err);
+        imgBox.textContent = 'تعذر الاتصال بالخادم.';
+      }finally{
+        loadingImgEl.hidden = true;
       }
     }
   </script>
