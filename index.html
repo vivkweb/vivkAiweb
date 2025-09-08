@@ -2,36 +2,70 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>شات AI</title>
+  <title>دردشة AI</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; }
-    #chatBox { width: 90%; max-width: 500px; margin: 20px auto; padding: 10px; border: 1px solid #444; background: #222; height: 300px; overflow-y: auto; text-align: left; }
-    #userInput { width: 70%; padding: 8px; }
-    button { padding: 8px 15px; background: #4CAF50; color: #fff; border: none; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .msg-user { color: #0f0; }
-    .msg-bot { color: #0af; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #0d1117; color: #e6edf3; display: flex; height: 100vh; }
+    .sidebar { width: 220px; background: #161b22; padding: 20px; border-right: 1px solid #30363d; }
+    .sidebar h2 { font-size: 18px; margin-bottom: 15px; }
+    .sidebar button { width: 100%; margin: 5px 0; padding: 8px; border: none; background: #238636; color: #fff; cursor: pointer; border-radius: 5px; }
+    .sidebar button:hover { background: #2ea043; }
+    .chat-container { flex: 1; display: flex; flex-direction: column; }
+    .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .message { max-width: 70%; padding: 10px 15px; border-radius: 10px; line-height: 1.4; }
+    .user { align-self: flex-end; background: #238636; color: #fff; border-bottom-right-radius: 0; }
+    .bot { align-self: flex-start; background: #30363d; border-bottom-left-radius: 0; }
+    .input-area { display: flex; padding: 15px; background: #161b22; border-top: 1px solid #30363d; }
+    #userInput { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #30363d; background: #0d1117; color: #e6edf3; }
+    button.send { margin-left: 10px; padding: 10px 20px; background: #238636; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    button.send:hover { background: #2ea043; }
+    .typing { font-style: italic; color: #8b949e; }
   </style>
 </head>
 <body>
 
-  <h2>💬 شات AI</h2>
+  <!-- الشريط الجانبي -->
+  <div class="sidebar">
+    <h2>💡 اقتراحات</h2>
+    <button onclick="quickSend('اشرحلي الذكاء الاصطناعي ببساطة')">الذكاء الاصطناعي</button>
+    <button onclick="quickSend('أكتبلي خطة مذاكرة فعالة')">خطة مذاكرة</button>
+    <button onclick="quickSend('اعطيني وصفة سهلة للعشاء')">وصفات</button>
+    <button onclick="quickSend('نكتة تضحكني 😂')">نكتة</button>
+  </div>
 
-  <div id="chatBox"></div>
+  <!-- المحادثة -->
+  <div class="chat-container">
+    <div id="chatBox" class="chat-box"></div>
 
-  <input id="userInput" type="text" placeholder="اكتب رسالتك هنا">
-  <button onclick="sendMessage()">إرسال</button>
+    <div class="input-area">
+      <input id="userInput" type="text" placeholder="اكتب رسالتك هنا... واضغط Enter">
+      <button class="send" onclick="sendMessage()">إرسال</button>
+    </div>
+  </div>
 
   <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const chatBox = document.getElementById("chatBox");
-      const message = input.value;
+    const chatBox = document.getElementById("chatBox");
+    const input = document.getElementById("userInput");
 
+    function addMessage(text, sender) {
+      const msg = document.createElement("div");
+      msg.classList.add("message", sender);
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage(msg) {
+      const message = msg || input.value;
       if (!message) return;
 
-      chatBox.innerHTML += `<div class="msg-user"><b>أنت:</b> ${message}</div>`;
+      addMessage(message, "user");
       input.value = "";
+
+      const typing = document.createElement("div");
+      typing.classList.add("typing");
+      typing.innerText = "الذكاء يكتب...";
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
         const res = await fetch("/api/chat", {
@@ -41,16 +75,46 @@
         });
 
         const data = await res.json();
+        typing.remove();
+
         if (data.reply) {
-          chatBox.innerHTML += `<div class="msg-bot"><b>الذكاء:</b> ${data.reply}</div>`;
+          typeEffect(data.reply, "bot");
         } else {
-          chatBox.innerHTML += `<div><b>خطأ:</b> ما جاني رد</div>`;
+          addMessage("⚠️ ما في رد", "bot");
         }
       } catch (err) {
-        chatBox.innerHTML += `<div><b>خطأ:</b> ${err.message}</div>`;
+        typing.remove();
+        addMessage("⚠️ خطأ: " + err.message, "bot");
       }
     }
-  </script>
 
+    // تأثير الكتابة
+    function typeEffect(text, sender) {
+      let i = 0;
+      const interval = setInterval(() => {
+        const lastMsg = document.createElement("div");
+        lastMsg.classList.add("message", sender);
+        lastMsg.innerText = text.slice(0, i);
+        if (chatBox.lastChild?.classList.contains(sender)) {
+          chatBox.removeChild(chatBox.lastChild);
+        }
+        chatBox.appendChild(lastMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        i++;
+        if (i > text.length) clearInterval(interval);
+      }, 20);
+    }
+
+    // إرسال بالـ Enter
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // رسائل سريعة من الأزرار
+    function quickSend(text) {
+      input.value = text;
+      sendMessage();
+    }
+  </script>
 </body>
 </html>
